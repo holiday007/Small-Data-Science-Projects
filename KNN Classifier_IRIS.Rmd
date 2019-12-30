@@ -1,0 +1,109 @@
+---
+title: "KNN Classifier for IRIS"
+author: |
+  | Author: Holiday Tang 
+  | [LinkeDin](https://www.linkedin.com/in/holiday-t/) |  [GitHub](https://github.com/holiday007) | [Kaggle Novice](https://www.kaggle.com/holibae007)
+date: "| Date: `r Sys.Date()`"
+output:
+  github_document:
+    toc: true
+    fig_width: 7
+    fig_height: 5
+    toc_depth: 2
+    dev: png
+    pandoc_args: --webtex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, comment=NA, cache=T)
+# install packages
+packs = c()
+new.pkg <- packs[!(packs %in% installed.packages())]
+if (length(new.pkg)) {
+  install.packages(new.pkg, repos = "http://cran.rstudio.com")
+}
+```
+
+##### Get Data
+
+```{r}
+# get & see data
+library(ISLR)
+head(iris)
+
+# structure of data
+str(iris)
+
+# summary of data
+summary(iris)
+```
+
+##### Standardize Variables
+
+```{r}
+# standardize data
+standardized.iris = data.frame(scale(iris[,-5]))
+var(standardized.iris[,1])
+```
+
+```{r}
+standardized.iris$Species = iris$Species
+head(standardized.iris)
+```
+
+##### Train/Test Split
+
+```{r}
+# train/test split
+
+library(caTools)
+Split = sample.split(standardized.iris$Species, SplitRatio = 0.7)
+
+train.data = subset(standardized.iris, Split == T)
+test.data = subset(standardized.iris, Split == F)
+```
+
+##### Building KNN model
+
+```{r}
+library(class)
+
+predicted.species = knn(train.data[,1:4], test.data[,1:4], 
+                        train.data[,5], k = 1)
+
+# prediction
+predicted.species
+```
+
+##### Misclassification Rate
+
+```{r}
+mean(predicted.species != test.data$Species)
+```
+
+##### Choosing a k value
+
+```{r}
+predicted.species = NULL
+error.rate = NULL
+
+for (i in 1:10){
+  predicted.species = knn(train.data[,1:4], test.data[,1:4], 
+                        train.data[,5], k = i)
+  error.rate[i] = mean(predicted.species != test.data$Species)
+}
+
+error.rate
+```
+
+```{r}
+k.value = 1:10
+error.rate.df = data.frame(error.rate, k.value)
+
+library(ggplot2)
+
+ggplot(error.rate.df, aes(x=k.value, y=error.rate)) + 
+  geom_point() + 
+  geom_line(lty = "dotted", color = "red")
+```
+
